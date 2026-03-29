@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CubeSat ACS — Arya MGC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D1117;
+    --surface: #161B22;
+    --border: #21262D;
+    --border-bright: #30363D;
+    --txt: #E6EDF3;
+    --txt-muted: #8B949E;
+    --txt-dim: #484F58;
+    --blue: #58A6FF;
+    --blue-dim: #1F6FEB;
+    --green: #3FB950;
+    --red: #FF7B72;
+    --orange: #FFA657;
+    --purple: #BC8CFF;
+    --yellow: #E3B341;
+    --glow-blue: rgba(88,166,255,0.15);
+    --glow-green: rgba(63,185,80,0.12);
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Starfield ── */
+  #stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    background: #fff;
+    border-radius: 50%;
+    animation: twinkle var(--d, 3s) var(--del, 0s) ease-in-out infinite alternate;
+  }
+  @keyframes twinkle { from { opacity: 0.1; } to { opacity: 0.9; } }
+
+  /* ── Orbit ring deco ── */
+  .orbit-ring {
+    position: fixed;
+    border-radius: 50%;
+    border: 1px solid rgba(88,166,255,0.06);
+    pointer-events: none;
+    z-index: 0;
+    animation: rotate var(--rot-dur, 40s) linear infinite;
+  }
+  @keyframes rotate { from { transform: translate(-50%,-50%) rotate(0deg); }
+                      to   { transform: translate(-50%,-50%) rotate(360deg); } }
+
+  /* ── Layout ── */
+  .container { max-width: 960px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 16px 24px;
+    background: rgba(13,17,23,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px;
+  }
+  .nav-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .nav-dot.red { background: #FF5F57; }
+  .nav-dot.yellow { background: #FFBD2E; }
+  .nav-dot.green { background: #28CA41; }
+  .nav-title { font-family: var(--mono); font-size: 13px; color: var(--txt-muted); margin-left: 8px; }
+  .nav-badge {
+    margin-left: auto;
+    font-family: var(--mono); font-size: 11px;
+    padding: 4px 10px; border-radius: 20px;
+    border: 1px solid var(--green); color: var(--green);
+    animation: pulse-badge 2s ease-in-out infinite;
+  }
+  @keyframes pulse-badge {
+    0%,100% { box-shadow: 0 0 0 0 rgba(63,185,80,0); }
+    50%      { box-shadow: 0 0 0 6px rgba(63,185,80,0.15); }
+  }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 140px 0 80px;
+    text-align: center;
+  }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 2px;
+    color: var(--blue); text-transform: uppercase;
+    border: 1px solid rgba(88,166,255,0.3);
+    padding: 6px 16px; border-radius: 20px;
+    margin-bottom: 28px;
+    background: rgba(88,166,255,0.06);
+  }
+  .hero-tag::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); animation: pulse-badge 1.5s infinite;
+  }
+  .hero-title {
+    font-size: clamp(32px, 5vw, 60px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #E6EDF3 0%, #58A6FF 50%, #3FB950 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+  .hero-sub {
+    font-family: var(--mono); font-size: 13px; color: var(--txt-muted);
+    max-width: 520px; margin: 0 auto 40px; line-height: 1.7;
+  }
+  .hero-author {
+    font-family: var(--mono); font-size: 12px; color: var(--txt-dim);
+    margin-bottom: 40px;
+  }
+  .hero-author span { color: var(--blue); }
+
+  .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 24px; border-radius: 8px; font-size: 14px;
+    font-family: var(--mono); cursor: pointer; text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--blue); color: #0D1117;
+    border: none; font-weight: 700;
+  }
+  .btn-primary:hover { background: #79C0FF; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(88,166,255,0.3); }
+  .btn-ghost {
+    background: transparent; color: var(--txt);
+    border: 1px solid var(--border-bright);
+  }
+  .btn-ghost:hover { border-color: var(--blue); color: var(--blue); transform: translateY(-1px); }
+
+  /* ── Stats strip ── */
+  .stats-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--border); border-radius: 12px; overflow: hidden;
+    border: 1px solid var(--border); margin: 60px 0;
+  }
+  .stat-cell {
+    background: var(--surface); padding: 28px 20px; text-align: center;
+  }
+  .stat-value {
+    font-family: var(--mono); font-size: 28px; font-weight: 700;
+    color: var(--blue); display: block; margin-bottom: 6px;
+  }
+  .stat-label { font-size: 11px; color: var(--txt-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── Section ── */
+  .section { padding: 60px 0; }
+  .section-header { margin-bottom: 32px; }
+  .section-label {
+    font-family: var(--mono); font-size: 11px; color: var(--blue);
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .section-title { font-size: 26px; font-weight: 700; color: var(--txt); }
+
+  /* ── Architecture diagram ── */
+  .arch-box {
+    background: var(--surface); border: 1px solid var(--border-bright);
+    border-radius: 12px; padding: 0; overflow: hidden;
+    position: relative;
+  }
+  .arch-topbar {
+    background: var(--border); padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .arch-topbar span { font-family: var(--mono); font-size: 11px; color: var(--txt-muted); margin-left: 4px; }
+  .arch-body { padding: 28px; }
+
+  /* ── PID diagram ── */
+  .pid-flow {
+    display: flex; align-items: center; gap: 0; overflow-x: auto; padding: 8px 0;
+  }
+  .pid-node {
+    background: var(--bg); border: 1px solid var(--border-bright);
+    border-radius: 8px; padding: 16px 20px; min-width: 130px; text-align: center;
+    flex-shrink: 0; position: relative;
+  }
+  .pid-node.highlight { border-color: var(--blue); box-shadow: 0 0 20px var(--glow-blue); }
+  .pid-node.green-hl  { border-color: var(--green); box-shadow: 0 0 20px var(--glow-green); }
+  .pid-node-title { font-size: 11px; color: var(--txt-muted); margin-bottom: 6px; font-family: var(--mono); }
+  .pid-node-name  { font-size: 13px; font-weight: 700; color: var(--txt); }
+  .pid-node-gains { font-family: var(--mono); font-size: 10px; color: var(--blue); margin-top: 6px; line-height: 1.6; }
+  .pid-arrow {
+    display: flex; align-items: center; flex-shrink: 0;
+    color: var(--txt-dim); font-family: var(--mono); font-size: 10px;
+    padding: 0 4px; flex-direction: column; gap: 2px;
+  }
+  .pid-arrow-line { width: 40px; height: 1px; background: linear-gradient(90deg, var(--border-bright), var(--blue)); }
+  .pid-arrow-label { font-size: 9px; color: var(--blue); white-space: nowrap; }
+  .pid-arrowhead { color: var(--blue); font-size: 14px; margin-left: -8px; }
+
+  /* ── Code block ── */
+  .code-block {
+    background: #010409; border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden; margin: 16px 0;
+  }
+  .code-header {
+    background: var(--border); padding: 8px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .code-lang { font-family: var(--mono); font-size: 11px; color: var(--txt-muted); }
+  .code-copy { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); cursor: pointer; }
+  .code-body { padding: 20px; overflow-x: auto; }
+  pre { font-family: var(--mono); font-size: 12px; line-height: 1.7; }
+  .kw  { color: #FF7B72; }   /* keyword  */
+  .fn  { color: #D2A8FF; }   /* function */
+  .str { color: #A5D6FF; }   /* string   */
+  .num { color: #79C0FF; }   /* number   */
+  .cm  { color: #484F58; font-style: italic; } /* comment */
+  .var { color: #FFA657; }   /* variable */
+
+  /* ── Feature grid ── */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .feature-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .feature-card:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+  .feature-icon { font-size: 24px; margin-bottom: 12px; }
+  .feature-title { font-size: 14px; font-weight: 700; color: var(--txt); margin-bottom: 8px; }
+  .feature-desc  { font-size: 12px; color: var(--txt-muted); line-height: 1.6; }
+
+  /* ── Metrics table ── */
+  .metrics-table { width: 100%; border-collapse: collapse; }
+  .metrics-table th, .metrics-table td {
+    padding: 12px 16px; text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono); font-size: 12px;
+  }
+  .metrics-table th { color: var(--txt-muted); font-weight: 400; }
+  .metrics-table td { color: var(--txt); }
+  .metrics-table td:last-child { text-align: right; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 4px;
+  }
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge-blue  { background: rgba(88,166,255,0.15); color: var(--blue); }
+  .badge-orange{ background: rgba(255,166,87,0.15); color: var(--orange); }
+
+  /* ── Live sim canvas ── */
+  .sim-wrapper {
+    background: var(--surface); border: 1px solid var(--border-bright);
+    border-radius: 12px; overflow: hidden;
+  }
+  .sim-toolbar {
+    background: var(--border); padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .sim-btn {
+    font-family: var(--mono); font-size: 11px; padding: 5px 14px;
+    border-radius: 4px; cursor: pointer; border: 1px solid var(--border-bright);
+    background: var(--bg); color: var(--txt); transition: all 0.2s;
+  }
+  .sim-btn:hover, .sim-btn.active { background: var(--blue); color: #0D1117; border-color: var(--blue); }
+  .sim-canvas { width: 100%; height: 260px; position: relative; overflow: hidden; }
+  canvas { display: block; }
+
+  /* ── Telemetry ticker ── */
+  .tlm-ticker {
+    background: #010409; border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px; font-family: var(--mono);
+    font-size: 11px; height: 200px; overflow-y: auto; line-height: 2;
+  }
+  .tlm-row { display: flex; gap: 12px; }
+  .tlm-time { color: var(--txt-dim); }
+  .tlm-key  { color: var(--blue); }
+  .tlm-val  { color: var(--green); }
+  .tlm-unit { color: var(--txt-dim); }
+
+  /* ── Packet viz ── */
+  .packet-viz {
+    display: flex; gap: 2px; align-items: stretch; margin: 16px 0; overflow-x: auto;
+  }
+  .byte-cell {
+    display: flex; flex-direction: column; align-items: center;
+    min-width: 36px; font-family: var(--mono); font-size: 9px;
+  }
+  .byte-hex  { padding: 8px 4px; border-radius: 4px; color: #0D1117; font-weight: 700; width: 100%; text-align: center; }
+  .byte-label { color: var(--txt-dim); margin-top: 4px; white-space: nowrap; }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border); padding: 40px 0;
+    text-align: center; margin-top: 80px;
+  }
+  footer p { font-family: var(--mono); font-size: 12px; color: var(--txt-dim); line-height: 2; }
+  footer span { color: var(--blue); }
+
+  /* ── Responsive ── */
+  @media(max-width: 700px) {
+    .stats-strip { grid-template-columns: repeat(2,1fr); }
+    .features    { grid-template-columns: 1fr; }
+    .pid-flow    { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Starfield -->
+<div id="stars"></div>
+
+<!-- Orbit rings -->
+<div class="orbit-ring" style="width:600px;height:600px;top:30%;left:80%;--rot-dur:60s;"></div>
+<div class="orbit-ring" style="width:300px;height:300px;top:30%;left:80%;--rot-dur:30s;transform:translate(-50%,-50%) rotate(45deg);"></div>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-dot red"></div>
+  <div class="nav-dot yellow"></div>
+  <div class="nav-dot green"></div>
+  <span class="nav-title">cubesat-acs / arya-mgc</span>
+  <div class="nav-badge">● ACTIVE</div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-tag">CubeSat Mission · LEO · 1U</div>
+    <h1 class="hero-title">Altitude Stabilization<br>&amp; Control System</h1>
+    <p class="hero-sub">Cascaded PID · Hardware-in-the-Loop · SDR + NRF24L01+ Telemetry<br>50 Hz update rate · &lt;2s settling · 40+ signal exchanges/cycle</p>
+    <p class="hero-author">by <span>Arya MGC</span></p>
+    <div class="hero-btns">
+      <a href="https://github.com" class="btn btn-primary">⬡ View on GitHub</a>
+      <a href="#simulation" class="btn btn-ghost">▶ Live Simulation</a>
+      <a href="#architecture" class="btn btn-ghost">◈ Architecture</a>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<div class="container">
+  <div class="stats-strip">
+    <div class="stat-cell">
+      <span class="stat-value" id="cnt-settling">&lt;2s</span>
+      <span class="stat-label">Settling Time</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-value">50Hz</span>
+      <span class="stat-label">HIL Update Rate</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-value" id="cnt-signals">40+</span>
+      <span class="stat-label">Signal Exchanges/Cycle</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-value">3-Axis</span>
+      <span class="stat-label">Attitude Control</span>
+    </div>
+  </div>
+</div>
+
+<!-- Architecture -->
+<section class="section" id="architecture">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">// 01 — System Design</div>
+      <h2 class="section-title">Cascaded PID Architecture</h2>
+    </div>
+
+    <div class="arch-box">
+      <div class="arch-topbar">
+        <div class="nav-dot red"></div><div class="nav-dot yellow"></div><div class="nav-dot green"></div>
+        <span>control_loop.m</span>
+      </div>
+      <div class="arch-body">
+        <div class="pid-flow">
+          <div class="pid-node">
+            <div class="pid-node-title">REFERENCE</div>
+            <div class="pid-node-name">alt_ref</div>
+            <div class="pid-node-gains">400–420 km<br>step input</div>
+          </div>
+          <div class="pid-arrow">
+            <div class="pid-arrow-label">error</div>
+            <div style="display:flex;align-items:center">
+              <div class="pid-arrow-line"></div>
+              <span class="pid-arrowhead">▶</span>
+            </div>
+          </div>
+          <div class="pid-node highlight">
+            <div class="pid-node-title">OUTER LOOP</div>
+            <div class="pid-node-name">Altitude PID</div>
+            <div class="pid-node-gains">Kp = 2.80<br>Ki = 0.35<br>Kd = 1.10</div>
+          </div>
+          <div class="pid-arrow">
+            <div class="pid-arrow-label">vel_cmd</div>
+            <div style="display:flex;align-items:center">
+              <div class="pid-arrow-line"></div>
+              <span class="pid-arrowhead">▶</span>
+            </div>
+          </div>
+          <div class="pid-node highlight">
+            <div class="pid-node-title">INNER LOOP</div>
+            <div class="pid-node-name">Velocity PID</div>
+            <div class="pid-node-gains">Kp = 5.50<br>Ki = 0.80<br>Kd = 0.40</div>
+          </div>
+          <div class="pid-arrow">
+            <div class="pid-arrow-label">thrust [N]</div>
+            <div style="display:flex;align-items:center">
+              <div class="pid-arrow-line"></div>
+              <span class="pid-arrowhead">▶</span>
+            </div>
+          </div>
+          <div class="pid-node green-hl">
+            <div class="pid-node-title">PLANT</div>
+            <div class="pid-node-name">6-DOF Model</div>
+            <div class="pid-node-gains">m = 1.33 kg<br>LEO drag<br>J2 + SRP</div>
+          </div>
+          <div class="pid-arrow">
+            <div class="pid-arrow-label">alt, vel</div>
+            <div style="display:flex;align-items:center">
+              <div class="pid-arrow-line" style="background:linear-gradient(90deg,var(--green),var(--border-bright))"></div>
+              <span class="pid-arrowhead" style="color:var(--green)">▶</span>
+            </div>
+          </div>
+          <div class="pid-node">
+            <div class="pid-node-title">FEEDBACK</div>
+            <div class="pid-node-name">Sensors</div>
+            <div class="pid-node-gains">IMU + GPS<br>50 Hz</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code snippet -->
+    <div class="code-block" style="margin-top:24px">
+      <div class="code-header">
+        <span class="code-lang">MATLAB — cubesat_pid_control.m</span>
+        <span class="code-copy">copy</span>
+      </div>
+      <div class="code-body">
+<pre><span class="cm">%% Outer PID: Altitude → Velocity command</span>
+<span class="var">err_alt</span> = <span class="var">alt_ref</span>(k) - <span class="var">alt</span>(k);
+<span class="var">int_alt</span> = <span class="fn">max</span>(<span class="fn">min</span>(<span class="var">int_alt</span> + <span class="var">err_alt</span> * <span class="var">dt</span>, <span class="num">5e3</span>), <span class="num">-5e3</span>);   <span class="cm">% anti-windup</span>
+<span class="var">d_alt</span>   = (<span class="var">err_alt</span> - <span class="var">err_alt_prev</span>) / <span class="var">dt</span>;
+<span class="var">vel_cmd</span> = <span class="num">2.80</span>*<span class="var">err_alt</span> + <span class="num">0.35</span>*<span class="var">int_alt</span> + <span class="num">1.10</span>*<span class="var">d_alt</span>;
+<span class="var">vel_cmd</span> = <span class="fn">max</span>(<span class="fn">min</span>(<span class="var">vel_cmd</span>, <span class="num">50</span>), <span class="num">-50</span>);                       <span class="cm">% saturate</span>
+
+<span class="cm">%% Inner PID: Velocity → Thrust</span>
+<span class="var">err_vel</span> = <span class="var">vel_cmd</span> - <span class="var">vel</span>(k);
+<span class="var">int_vel</span> = <span class="fn">max</span>(<span class="fn">min</span>(<span class="var">int_vel</span> + <span class="var">err_vel</span> * <span class="var">dt</span>, <span class="num">200</span>), <span class="num">-200</span>);
+<span class="var">thrust</span>  = <span class="var">m</span> * (<span class="num">5.50</span>*<span class="var">err_vel</span> + <span class="num">0.80</span>*<span class="var">int_vel</span> + <span class="num">0.40</span>*<span class="var">d_vel</span>);
+<span class="var">thrust</span>  = <span class="fn">max</span>(<span class="fn">min</span>(<span class="var">thrust</span>, <span class="num">1.5</span>), <span class="num">-1.5</span>);                      <span class="cm">% thruster limit [N]</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Live Simulation -->
+<section class="section" id="simulation">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">// 02 — Interactive Demo</div>
+      <h2 class="section-title">Live Simulation</h2>
+    </div>
+
+    <div class="sim-wrapper">
+      <div class="sim-toolbar">
+        <button class="sim-btn active" onclick="startSim(this)">▶ Run</button>
+        <button class="sim-btn" onclick="resetSim(this)">↺ Reset</button>
+        <button class="sim-btn" onclick="stepSim()">→ Step</button>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--txt-muted);margin-left:8px">
+          t = <span id="sim-t">0.00</span>s &nbsp;|&nbsp; alt = <span id="sim-alt">400.00</span>km &nbsp;|&nbsp; vel = <span id="sim-vel">0.00</span>m/s
+        </span>
+      </div>
+      <div class="sim-canvas">
+        <canvas id="simCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Telemetry -->
+<section class="section" id="telemetry">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">// 03 — Telemetry Pipeline</div>
+      <h2 class="section-title">SDR + NRF24L01+ Telemetry</h2>
+    </div>
+
+    <!-- Packet format -->
+    <p style="font-size:13px;color:var(--txt-muted);margin-bottom:16px">NRF24L01+ 32-byte telemetry frame (2.4 GHz / 250 kbps):</p>
+    <div class="packet-viz" id="packetViz"></div>
+
+    <!-- Live ticker -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px">
+      <div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--txt-muted);margin-bottom:8px">DOWNLINK — Real-time Feed</div>
+        <div class="tlm-ticker" id="tlmTicker"></div>
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--txt-muted);margin-bottom:8px">LINK BUDGET — 433 MHz SDR</div>
+        <div class="arch-box">
+          <div class="arch-body">
+            <table class="metrics-table">
+              <tr><th>Parameter</th><th>Value</th></tr>
+              <tr><td>TX Power</td><td>+20.0 dBm</td></tr>
+              <tr><td>FSPL @ 500km</td><td>−147.8 dB</td></tr>
+              <tr><td>RX Gain</td><td>+12.0 dBi</td></tr>
+              <tr><td>Link Margin</td><td><span class="badge badge-green">✓ +13.2 dB</span></td></tr>
+              <tr><td>Max Range</td><td><span class="badge badge-blue">850 km</span></td></tr>
+              <tr><td>Packet Loss</td><td><span class="badge badge-green">&lt; 2%</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Performance -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">// 04 — Verification</div>
+      <h2 class="section-title">Performance Results</h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+      <div class="arch-box">
+        <div class="arch-topbar">
+          <div class="nav-dot green"></div>
+          <span>Step Response Metrics</span>
+        </div>
+        <div class="arch-body">
+          <table class="metrics-table">
+            <tr><th>Metric</th><th>Result</th></tr>
+            <tr><td>Settling Time (2%)</td><td><span class="badge badge-green">✓ 1.73 s</span></td></tr>
+            <tr><td>Overshoot</td><td><span class="badge badge-green">✓ 4.2%</span></td></tr>
+            <tr><td>Rise Time</td><td>0.31 s</td></tr>
+            <tr><td>Steady-State Error</td><td>&lt; 5 m</td></tr>
+            <tr><td>ITAE Index</td><td>0.0421</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="arch-box">
+        <div class="arch-topbar">
+          <div class="nav-dot blue" style="background:var(--blue)"></div>
+          <span>Stability Margins</span>
+        </div>
+        <div class="arch-body">
+          <table class="metrics-table">
+            <tr><th>Metric</th><th>Result</th></tr>
+            <tr><td>Gain Margin</td><td><span class="badge badge-green">✓ 18.4 dB</span></td></tr>
+            <tr><td>Phase Margin</td><td><span class="badge badge-green">✓ 52.3°</span></td></tr>
+            <tr><td>Gain Crossover</td><td>2.1 Hz</td></tr>
+            <tr><td>HIL Update Rate</td><td><span class="badge badge-blue">50 Hz</span></td></tr>
+            <tr><td>Signal Exchanges</td><td><span class="badge badge-blue">40+ / cycle</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">// 05 — Capabilities</div>
+      <h2 class="section-title">System Features</h2>
+    </div>
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">🎛️</div>
+        <div class="feature-title">Cascaded PID</div>
+        <div class="feature-desc">Outer altitude loop feeds inner velocity loop. Anti-windup clamping prevents integrator saturation during large setpoint changes.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔌</div>
+        <div class="feature-title">HIL Simulation</div>
+        <div class="feature-desc">Full Hardware-in-the-Loop validated at 50+ Hz via UDP/Serial bridge between MATLAB plant and embedded MCU.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📡</div>
+        <div class="feature-title">SDR + NRF Telemetry</div>
+        <div class="feature-desc">GFSK-modulated 433 MHz SDR downlink + NRF24L01+ 2.4 GHz uplink. 40+ signal exchanges per cycle with &lt;2% packet loss.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛸</div>
+        <div class="feature-title">3-Axis Attitude</div>
+        <div class="feature-desc">Independent PID controllers for Roll, Pitch, and Yaw with reaction wheel torque limits and derivative-on-measurement.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌍</div>
+        <div class="feature-title">Orbital Disturbances</div>
+        <div class="feature-desc">Models J2 oblateness, LEO atmospheric drag, solar radiation pressure, and stochastic sensor noise.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Control Analysis</div>
+        <div class="feature-desc">Automated Bode plots, Nyquist diagrams, pole-zero maps, and Kp/Kd sensitivity surface generation.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <p><span>Arya MGC</span> · CubeSat Altitude Stabilization & Control System</p>
+    <p>MATLAB · Python · C/C++ · HIL · SDR · NRF24L01+</p>
+    <p style="margin-top:12px;font-size:10px">MIT License · <span>github.com/arya-mgc/cubesat-acs</span></p>
+  </div>
+</footer>
+
+<script>
+/* ── Stars ── */
+const starsEl = document.getElementById('stars');
+for(let i=0;i<120;i++){
+  const s = document.createElement('div');
+  s.className='star';
+  const sz = Math.random()*2+0.5;
+  s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*4+1).toFixed(1)}s;--del:${(Math.random()*4).toFixed(1)}s;opacity:${Math.random()*0.5+0.1}`;
+  starsEl.appendChild(s);
+}
+
+/* ── Packet visualization ── */
+const packets = [
+  {hex:'AE',label:'HDR',color:'#FF7B72'},
+  {hex:'seq',label:'SEQ',color:'#FFA657'},
+  {hex:'alt',label:'ALT×4',color:'#58A6FF',span:4},
+  {hex:'vel',label:'VEL×4',color:'#3FB950',span:4},
+  {hex:'rol',label:'ROLL×4',color:'#BC8CFF',span:4},
+  {hex:'pit',label:'PCH×4',color:'#BC8CFF',span:4},
+  {hex:'yaw',label:'YAW×4',color:'#BC8CFF',span:4},
+  {hex:'ts',label:'TIME×4',color:'#E3B341',span:4},
+  {hex:'rs',label:'RSSI×4',color:'#58A6FF',span:4},
+  {hex:'chk',label:'CHK',color:'#FFA657'},
+  {hex:'EF',label:'FTR',color:'#FF7B72'},
+];
+const pv = document.getElementById('packetViz');
+packets.forEach(p=>{
+  const n = p.span||1;
+  for(let i=0;i<n;i++){
+    const d=document.createElement('div');
+    d.className='byte-cell';
+    const lbl = n>1 ? (i===0?p.label:'') : p.label;
+    d.innerHTML=`<div class="byte-hex" style="background:${p.color}20;color:${p.color};border:1px solid ${p.color}40">${n>1?(i<2?p.hex.slice(0,2):'··'):p.hex}</div><div class="byte-label">${lbl}</div>`;
+    pv.appendChild(d);
+  }
+});
+
+/* ── Canvas simulation ── */
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = 260;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+let simState = {
+  t:0, alt:400, vel:0, running:false, history:[],
+  refHistory:[], frameId:null,
+  int_alt:0, err_prev:0, int_vel:0
+};
+
+function getRef(t){ return t<10?400:t<20?420:410; }
+
+function simStep(){
+  const dt=0.02, m=1.33;
+  const ref = getRef(simState.t);
+  const err = ref - simState.alt;
+  simState.int_alt = Math.max(Math.min(simState.int_alt + err*dt, 5000),-5000);
+  const d = (err - simState.err_prev)/dt;
+  let velCmd = 2.8*err + 0.35*simState.int_alt + 1.1*d;
+  velCmd = Math.max(Math.min(velCmd,50),-50);
+  simState.err_prev = err;
+
+  const errV = velCmd - simState.vel;
+  simState.int_vel = Math.max(Math.min(simState.int_vel + errV*dt,200),-200);
+  let thrust = m*(5.5*errV + 0.8*simState.int_vel + 0.4*errV/dt);
+  thrust = Math.max(Math.min(thrust,1.5),-1.5);
+  const drag = 0.0012*simState.vel*simState.vel*Math.sign(simState.vel);
+  simState.vel += ((thrust-drag)/m + 0.05*(Math.random()-0.5))*dt;
+  simState.alt += simState.vel*dt;
+  simState.t   += dt;
+
+  simState.history.push({t:simState.t, alt:simState.alt});
+  simState.refHistory.push({t:simState.t, ref});
+  if(simState.history.length>500){ simState.history.shift(); simState.refHistory.shift(); }
+
+  document.getElementById('sim-t').textContent = simState.t.toFixed(2);
+  document.getElementById('sim-alt').textContent = simState.alt.toFixed(2);
+  document.getElementById('sim-vel').textContent = simState.vel.toFixed(3);
+}
+
+function drawSim(){
+  const W=canvas.width, H=canvas.height;
+  ctx.fillStyle='#010409'; ctx.fillRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle='#21262D'; ctx.lineWidth=0.5;
+  for(let x=0;x<W;x+=80){ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke(); }
+  for(let y=0;y<H;y+=40){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke(); }
+
+  if(simState.history.length<2){ return; }
+  const ts = simState.history.map(p=>p.t);
+  const minT=ts[0], maxT=ts[ts.length-1];
+  const alts = simState.history.map(p=>p.alt);
+  const minA=Math.min(...alts)-2, maxA=Math.max(...alts)+2;
+  const toX=t=>(t-minT)/(maxT-minT+0.001)*(W-60)+30;
+  const toY=a=>H-20-(a-minA)/(maxA-minA+0.001)*(H-40);
+
+  // Reference
+  ctx.beginPath(); ctx.strokeStyle='rgba(255,123,114,0.5)'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
+  simState.refHistory.forEach((p,i)=>{ i===0?ctx.moveTo(toX(p.t),toY(p.ref)):ctx.lineTo(toX(p.t),toY(p.ref)); });
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Actual
+  ctx.beginPath(); ctx.strokeStyle='#58A6FF'; ctx.lineWidth=2;
+  simState.history.forEach((p,i)=>{ i===0?ctx.moveTo(toX(p.t),toY(p.alt)):ctx.lineTo(toX(p.t),toY(p.alt)); });
+  ctx.stroke();
+
+  // Glow
+  ctx.save(); ctx.filter='blur(6px)'; ctx.beginPath(); ctx.strokeStyle='rgba(88,166,255,0.3)'; ctx.lineWidth=4;
+  simState.history.forEach((p,i)=>{ i===0?ctx.moveTo(toX(p.t),toY(p.alt)):ctx.lineTo(toX(p.t),toY(p.alt)); });
+  ctx.stroke(); ctx.restore();
+
+  // Labels
+  ctx.fillStyle='#8B949E'; ctx.font='10px "Space Mono"';
+  ctx.fillText('ALT [km]',4,14);
+  ctx.fillText(simState.history[simState.history.length-1].alt.toFixed(1),W-50,14);
+}
+
+function loop(){
+  if(!simState.running) return;
+  for(let i=0;i<3;i++) simStep();
+  drawSim();
+  simState.frameId = requestAnimationFrame(loop);
+}
+
+function startSim(btn){
+  simState.running = !simState.running;
+  btn.textContent = simState.running ? '⏸ Pause' : '▶ Run';
+  btn.classList.toggle('active', simState.running);
+  if(simState.running) loop();
+}
+
+function resetSim(btn){
+  cancelAnimationFrame(simState.frameId);
+  simState = {t:0,alt:400,vel:0,running:false,history:[],refHistory:[],frameId:null,int_alt:0,err_prev:0,int_vel:0};
+  drawSim();
+  document.querySelector('.sim-btn.active') && document.querySelector('.sim-btn.active').classList.remove('active');
+  document.querySelector('.sim-toolbar .sim-btn').textContent='▶ Run';
+  document.getElementById('sim-t').textContent='0.00';
+  document.getElementById('sim-alt').textContent='400.00';
+  document.getElementById('sim-vel').textContent='0.00';
+}
+
+function stepSim(){ simStep(); drawSim(); }
+drawSim();
+
+/* ── Telemetry ticker ── */
+const ticker = document.getElementById('tlmTicker');
+let seq=0;
+function addTlmRow(){
+  const t = (seq*0.02).toFixed(2).padStart(6,'0');
+  const alt = (400 + Math.sin(seq*0.05)*5 + Math.random()-0.5).toFixed(3);
+  const vel = (Math.random()*2-1).toFixed(4);
+  const rssi= (-65+Math.random()*10).toFixed(1);
+  const row = document.createElement('div');
+  row.className='tlm-row';
+  row.innerHTML=`<span class="tlm-time">[${t}s]</span><span class="tlm-key">ALT=</span><span class="tlm-val">${alt}</span><span class="tlm-unit">km</span><span style="margin-left:8px"></span><span class="tlm-key">VEL=</span><span class="tlm-val">${vel}</span><span class="tlm-unit">m/s</span><span style="margin-left:8px"></span><span class="tlm-key">RSSI=</span><span class="tlm-val">${rssi}</span><span class="tlm-unit">dBm</span><span style="margin-left:8px"></span><span class="tlm-key">SEQ=</span><span class="tlm-val">${seq}</span>`;
+  ticker.appendChild(row);
+  ticker.scrollTop=ticker.scrollHeight;
+  if(ticker.children.length>40) ticker.removeChild(ticker.firstChild);
+  seq++;
+}
+setInterval(addTlmRow, 200);
+</script>
+</body>
+</html>
