@@ -7,8 +7,10 @@
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
 
 **A full-stack CubeSat Attitude & Control System (ACS) simulation featuring cascaded PID control, Hardware-in-the-Loop (HIL) validation, and a complete SDR + NRF24L01+ telemetry pipeline.**
-*Author: **Arya MGC***
+*Author: **Arya MGC*** 
 </div>
+
+
 
 ---
 
@@ -49,25 +51,25 @@ This project implements a complete **Altitude Stabilization and Control System (
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     CubeSat ACS — Block Diagram                  │
-│                                                                   │
+│                     CubeSat ACS — Block Diagram                 │
+│                                                                 │
 │  Reference         ┌──────────┐   vel_cmd  ┌──────────┐         │
-│  Altitude ────────►│ Outer    ├────────────►│ Inner    │         │
+│  Altitude ────────►│ Outer    ├────────────►  Inner   │         │
 │  (alt_ref)         │ PID      │            │ PID      │         │
 │                    │ Kp=2.80  │            │ Kp=5.50  │  thrust │
 │                    │ Ki=0.35  │            │ Ki=0.80  ├────────►│
 │                    │ Kd=1.10  │            │ Kd=0.40  │         │
 │                    └──────────┘            └──────────┘         │
-│                                                    │             │
-│                    ┌──────────────────────────────-┘             │
-│                    │        Plant (6-DOF)                         │
-│                    │   m=1.33 kg, drag, J2 perturbation          │
-│                    └────────────────────────────────►            │
-│                         alt, vel, attitude   (feedback)          │
-│                                                                   │
+│                                                    │            │
+│                    ┌──────────────────────────────-┘            │
+│                    │        Plant (6-DOF)                       │
+│                    │   m=1.33 kg, drag, J2 perturbation         │
+│                    └────────────────────────────────►           │
+│                         alt, vel, attitude   (feedback)         │
+│                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐    │
-│  │              Telemetry Pipeline                          │    │
-│  │  [Sensors] → [NRF24L01+] → [SDR GFSK] → [Ground Stn]  │    │
+│  │              Telemetry Pipeline                         │    │
+│  │  [Sensors] → [NRF24L01+] → [SDR GFSK] → [Ground Stn]    │    │
 │  └─────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────┘
 ```
