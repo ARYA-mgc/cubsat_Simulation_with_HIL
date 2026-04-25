@@ -85,8 +85,6 @@ Level 1 (Outer) — Altitude Control       50 Hz
         └── Yaw   PID  [Kp=8.0,  Ki=0.3, Kd=1.5]
 ```
 
-
-
 ---
 
 ## 📊 Key Results
