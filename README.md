@@ -1,10 +1,5 @@
 # 🛰️ CubeSat Altitude Stabilization & Control System
 <div align="center">
-![MATLAB](https://img.shields.io/badge/MATLAB-R2023b-orange?style=for-the-badge&logo=mathworks)
-![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![HIL](https://img.shields.io/badge/HIL-50Hz-red?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
 
 **A full-stack CubeSat Attitude & Control System (ACS) simulation featuring cascaded PID control, Hardware-in-the-Loop (HIL) validation, and a complete SDR + NRF24L01+ telemetry pipeline.**
 *Author: **Arya MGC*** 
