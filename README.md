@@ -468,10 +468,6 @@ MIT License — See [LICENSE](LICENSE) for details.
 
 ---
 
-<div align="center">
+## Authors
 
-**Arya MGC** — CubeSat ACS Project
-
-*"Control the orbit. Own the mission."*
-
-</div>
+@ARYA-mgc — System Architecture & Embedded HIL Integration
